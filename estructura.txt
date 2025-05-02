@@ -1,0 +1,20 @@
+
+
+/config
+    app.js
+    db.js
+/controllers
+    authController.js
+/middlewares
+    authMiddleware.js
+/models
+/node_modules
+/routes
+    authRoutes.js
+/utils
+.env
+index.js
+init.sql
+package-lock.json
+package.json
+README.md
