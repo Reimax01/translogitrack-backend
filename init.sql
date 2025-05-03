@@ -36,5 +36,6 @@ CREATE TABLE pedidos (
     id_vehiculo INTEGER REFERENCES vehiculos(id),
     id_ruta INTEGER REFERENCES rutas(id),
     estado VARCHAR(20), -- pendiente, en_transito, entregado, cancelado
-    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    descripcion TEXT NOT NULL -- Detalles del pedido
 );
