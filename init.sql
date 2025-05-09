@@ -1,41 +1,98 @@
-CREATE TABLE usuarios (
-    id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100),
-    email VARCHAR(100) UNIQUE,
-    password TEXT,
-    rol VARCHAR(20), -- admin, operador, cliente
-    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- ============================
+-- BASE DE DATOS: TransLogiTrack
+-- ============================
+
+-- ENUMS
+CREATE TYPE rol_usuario AS ENUM ('Administrador', 'Operador', 'Cliente');
+CREATE TYPE estado_pedido AS ENUM ('Pendiente', 'En tránsito', 'Entregado', 'Cancelado');
+CREATE TYPE estado_operativo_camion AS ENUM ('Disponible', 'En mantenimiento', 'Asignado');
+CREATE TYPE tipo_evento_historial AS ENUM ('sanción', 'premio', 'incidente');
+CREATE TYPE tipo_mantenimiento AS ENUM ('preventivo', 'correctivo');
+
+-- USUARIOS
+CREATE TABLE Usuario (
+    id_usuario SERIAL PRIMARY KEY,
+    nombre_completo TEXT NOT NULL,
+    correo_electronico TEXT UNIQUE NOT NULL,
+    contrasena_hash TEXT NOT NULL,
+    rol rol_usuario NOT NULL,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    activo BOOLEAN DEFAULT TRUE
 );
 
-CREATE TABLE conductores (
-    id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100),
-    licencia VARCHAR(50),
-    historial TEXT
+-- CONDUCTORES
+CREATE TABLE Conductor (
+    id_conductor SERIAL PRIMARY KEY,
+    nombre_completo TEXT NOT NULL,
+    numero_licencia TEXT UNIQUE NOT NULL,
+    fecha_vencimiento_licencia DATE NOT NULL,
+    activo BOOLEAN DEFAULT TRUE
 );
 
-CREATE TABLE vehiculos (
-    id SERIAL PRIMARY KEY,
-    placa VARCHAR(20) UNIQUE,
-    capacidad INTEGER,
-    mantenimiento BOOLEAN,
-    disponible BOOLEAN DEFAULT true
+-- HISTORIAL DE CONDUCTORES
+CREATE TABLE HistorialConductor (
+    id_historial SERIAL PRIMARY KEY,
+    id_conductor INTEGER REFERENCES Conductor(id_conductor) ON DELETE CASCADE,
+    descripcion TEXT NOT NULL,
+    tipo_evento tipo_evento_historial NOT NULL,
+    fecha_evento DATE NOT NULL
 );
 
-CREATE TABLE rutas (
-    id SERIAL PRIMARY KEY,
-    origen VARCHAR(100),
-    destino VARCHAR(100),
-    distancia_km INTEGER
+-- CAMIONES
+CREATE TABLE Camion (
+    id_camion SERIAL PRIMARY KEY,
+    placa TEXT UNIQUE NOT NULL,
+    capacidad_kg INTEGER NOT NULL,
+    estado_operativo estado_operativo_camion NOT NULL DEFAULT 'Disponible',
+    ubicacion_actual JSONB,
+    activo BOOLEAN DEFAULT TRUE,
+    km_actual NUMERIC(10,2) DEFAULT 0
 );
 
-CREATE TABLE pedidos (
-    id SERIAL PRIMARY KEY,
-    id_usuario INTEGER REFERENCES usuarios(id),
-    id_conductor INTEGER REFERENCES conductores(id),
-    id_vehiculo INTEGER REFERENCES vehiculos(id),
-    id_ruta INTEGER REFERENCES rutas(id),
-    estado VARCHAR(20), -- pendiente, en_transito, entregado, cancelado
-    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    descripcion TEXT NOT NULL -- Detalles del pedido
+-- MANTENIMIENTO DE CAMIONES
+CREATE TABLE MantenimientoCamion (
+    id_mantenimiento SERIAL PRIMARY KEY,
+    id_camion INTEGER REFERENCES Camion(id_camion) ON DELETE CASCADE,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE,
+    descripcion TEXT NOT NULL,
+    tipo tipo_mantenimiento NOT NULL,
+    km NUMERIC(10,2) DEFAULT 0
 );
+
+-- RUTAS
+CREATE TABLE Ruta (
+    id_ruta SERIAL PRIMARY KEY,
+    origen TEXT NOT NULL,
+    destino TEXT NOT NULL,
+    nombre_destino TEXT, -- campo adicional según el diagrama
+    distancia_km NUMERIC(10,2) NOT NULL,
+    tiempo_estimado_min INTEGER,
+    precio NUMERIC(10,2)
+);
+
+-- PEDIDOS
+CREATE TABLE Pedido (
+    id_pedido SERIAL PRIMARY KEY,
+    id_cliente INTEGER REFERENCES Usuario(id_usuario) ON DELETE SET NULL,
+    id_ruta INTEGER REFERENCES Ruta(id_ruta),
+    id_camion INTEGER REFERENCES Camion(id_camion),
+    id_conductor INTEGER REFERENCES Conductor(id_conductor),
+    estado estado_pedido NOT NULL DEFAULT 'Pendiente',
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_entrega_estimada TIMESTAMP,
+    fecha_entrega_real TIMESTAMP,
+    observaciones TEXT,
+    precio NUMERIC(10,2),
+    nro_guia TEXT
+);
+
+-- SEGUIMIENTO DE PEDIDOS
+CREATE TABLE SeguimientoPedido (
+    id_seguimiento SERIAL PRIMARY KEY,
+    id_pedido INTEGER REFERENCES Pedido(id_pedido) ON DELETE CASCADE,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ubicacion JSONB,
+    estado estado_pedido NOT NULL
+);
+

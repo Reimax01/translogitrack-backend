@@ -4,7 +4,7 @@ const db = require('../config/db');
 // Obtener todos los pedidos
 const getAllPedidos = async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM pedidos');
+    const result = await db.query('SELECT * FROM Pedido');
     res.json(result.rows);
   } catch (error) {
     console.error('❌ Error al obtener pedidos:', error);
@@ -14,14 +14,14 @@ const getAllPedidos = async (req, res) => {
 
 // Crear nuevo pedido
 const createPedido = async (req, res) => {
-  const { id_usuario, id_conductor, id_vehiculo, id_ruta, estado , descripcion} = req.body;
+  const { id_cliente, id_conductor, id_camion, id_ruta, estado, fecha_entrega_estimada, precio, nro_guia, observaciones } = req.body;
 
   try {
     const result = await db.query(
-      `INSERT INTO pedidos (id_usuario, id_conductor, id_vehiculo, id_ruta, estado, descripcion)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO Pedido (id_cliente, id_conductor, id_camion, id_ruta, estado, fecha_entrega_estimada, precio, nro_guia, observaciones)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [id_usuario, id_conductor, id_vehiculo, id_ruta, estado, descripcion]
+      [id_cliente, id_conductor, id_camion, id_ruta, estado, fecha_entrega_estimada, precio, nro_guia, observaciones]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -32,16 +32,16 @@ const createPedido = async (req, res) => {
 
 // Actualizar pedido
 const updatePedido = async (req, res) => {
-  const { id } = req.params;
-  const { estado } = req.body;
+  const { id_pedido} = req.params;
+  const { estado, fecha_entrega_real, observaciones } = req.body;
 
   try {
     const result = await db.query(
-      `UPDATE pedidos
-       SET estado = $1
-       WHERE id = $2
+      `UPDATE Pedido
+       SET estado = $1, fecha_entrega_real = $2, observaciones = $3
+       WHERE id_pedido = $4
        RETURNING *`,
-      [estado, id]
+      [estado, fecha_entrega_real, observaciones, id_pedido]
     );
 
     res.json(result.rows[0]);
@@ -53,10 +53,10 @@ const updatePedido = async (req, res) => {
 
 // Eliminar pedido
 const deletePedido = async (req, res) => {
-  const { id } = req.params;
+  const { id_pedido } = req.params;
 
   try {
-    await db.query('DELETE FROM pedidos WHERE id = $1', [id]);
+    await db.query('DELETE FROM Pedido WHERE id_pedido = $1', [id_pedido]);
     res.json({ message: 'Pedido eliminado correctamente' });
   } catch (error) {
     console.error('❌ Error al eliminar pedido:', error);
