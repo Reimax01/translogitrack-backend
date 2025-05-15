@@ -21,10 +21,26 @@ const Conductor = {
     return result.rows;
   },
 
-  async actualizar(id_conductor, { nombre_completo, numero_licencia, fecha_vencimiento_licencia }) {
+  async actualizar(id_conductor, camposActualizados) {
+    // 1. Obtener el registro actual
+    const { rows } = await db.query('SELECT * FROM Conductor WHERE id_conductor = $1', [id_conductor]);
+    if (rows.length === 0) throw new Error('Conductor no encontrado');
+  
+    const actual = rows[0];
+  
+    // 2. Combinar datos existentes con los nuevos (merge)
+    const {
+      nombre_completo = actual.nombre_completo,
+      numero_licencia = actual.numero_licencia,
+      fecha_vencimiento_licencia = actual.fecha_vencimiento_licencia
+    } = camposActualizados;
+  
+    // 3. Ejecutar update
     const query = `
       UPDATE Conductor
-      SET nombre_completo = $1, numero_licencia = $2, fecha_vencimiento_licencia = $3
+      SET nombre_completo = $1,
+          numero_licencia = $2,
+          fecha_vencimiento_licencia = $3
       WHERE id_conductor = $4
       RETURNING *;
     `;
@@ -32,6 +48,7 @@ const Conductor = {
     const result = await db.query(query, values);
     return result.rows[0];
   },
+  
 
   async eliminar(id_conductor) {
     const query = `

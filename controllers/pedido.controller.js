@@ -1,62 +1,92 @@
-// controllers/pedido.controller.js
-const db = require('../config/db');
+const Pedido = require('../models/pedido.model');
 
-// Obtener todos los pedidos
 const getAllPedidos = async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM Pedido');
-    res.json(result.rows);
+    const pedidos = await Pedido.obtenerTodos();
+    res.json(pedidos);
   } catch (error) {
     console.error('❌ Error al obtener pedidos:', error);
     res.status(500).json({ message: 'Error al obtener pedidos' });
   }
 };
 
-// Crear nuevo pedido
+const getPedidoById = async (req, res) => {
+  const { id_pedido } = req.params;
+  try {
+    const pedido = await Pedido.obtenerPorId(id_pedido);
+    if (pedido) {
+      res.json(pedido);
+    } else {
+      res.status(404).json({ message: 'Pedido no encontrado' });
+    }
+  } catch (error) {
+    console.error('❌ Error al obtener pedido:', error);
+    res.status(500).json({ message: 'Error al obtener pedido' });
+  }
+};
+
 const createPedido = async (req, res) => {
-  const { id_cliente, id_conductor, id_camion, id_ruta, estado, fecha_entrega_estimada, precio, nro_guia, observaciones } = req.body;
+  const {
+    id_cliente,
+    id_ruta,
+    id_camion,
+    id_conductor,
+    estado,
+    fecha_entrega_estimada,
+    observaciones,
+    precio,
+    nro_guia,
+  } = req.body;
 
   try {
-    const result = await db.query(
-      `INSERT INTO Pedido (id_cliente, id_conductor, id_camion, id_ruta, estado, fecha_entrega_estimada, precio, nro_guia, observaciones)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING *`,
-      [id_cliente, id_conductor, id_camion, id_ruta, estado, fecha_entrega_estimada, precio, nro_guia, observaciones]
-    );
-    res.status(201).json(result.rows[0]);
+    const nuevoPedido = await Pedido.crear({
+      id_cliente,
+      id_ruta,
+      id_camion,
+      id_conductor,
+      estado,
+      fecha_entrega_estimada,
+      observaciones,
+      precio,
+      nro_guia,
+    });
+    res.status(201).json(nuevoPedido);
   } catch (error) {
     console.error('❌ Error al crear pedido:', error);
     res.status(500).json({ message: 'Error al crear pedido' });
   }
 };
 
-// Actualizar pedido
 const updatePedido = async (req, res) => {
-  const { id_pedido} = req.params;
-  const { estado, fecha_entrega_real, observaciones } = req.body;
+  const { id_pedido } = req.params;
+  const {
+    estado,
+    fecha_entrega_real,
+    observaciones,
+    precio,
+    nro_guia,
+  } = req.body;
 
   try {
-    const result = await db.query(
-      `UPDATE Pedido
-       SET estado = $1, fecha_entrega_real = $2, observaciones = $3
-       WHERE id_pedido = $4
-       RETURNING *`,
-      [estado, fecha_entrega_real, observaciones, id_pedido]
-    );
-
-    res.json(result.rows[0]);
+    const pedidoActualizado = await Pedido.actualizar(id_pedido, {
+      estado,
+      fecha_entrega_real,
+      observaciones,
+      precio,
+      nro_guia,
+    });
+    res.json(pedidoActualizado);
   } catch (error) {
     console.error('❌ Error al actualizar pedido:', error);
     res.status(500).json({ message: 'Error al actualizar pedido' });
   }
 };
 
-// Eliminar pedido
 const deletePedido = async (req, res) => {
   const { id_pedido } = req.params;
 
   try {
-    await db.query('DELETE FROM Pedido WHERE id_pedido = $1', [id_pedido]);
+    await Pedido.eliminar(id_pedido);
     res.json({ message: 'Pedido eliminado correctamente' });
   } catch (error) {
     console.error('❌ Error al eliminar pedido:', error);
@@ -66,6 +96,7 @@ const deletePedido = async (req, res) => {
 
 module.exports = {
   getAllPedidos,
+  getPedidoById,
   createPedido,
   updatePedido,
   deletePedido,
