@@ -16,6 +16,9 @@ const adminRoutes = require("./routes/admin.routes");
 const conductorRoutes = require("./routes/conductor.routes");
 const camionRoutes = require("./routes/camion.routes");
 
+// Importar middleware global de manejo de errores
+const errorHandler = require("./middleware/errorHandler");
+
 // Rutas principales
 app.use("/api/auth", authRoutes);            // Rutas de autenticación
 app.use("/api/pedidos", pedidoRoutes);       // Rutas de pedidos
@@ -28,11 +31,8 @@ app.get("/", (req, res) => {
   res.send("🚀 API funcionando correctamente");
 });
 
-// Middleware de manejo de errores global
-app.use((err, req, res, next) => {
-  console.error(err); // Log del error para debug
-  res.status(500).json({ error: "Algo salió mal, por favor intente nuevamente." });
-});
+// Middleware de manejo de errores global (al final, después de las rutas)
+app.use(errorHandler);
 
 // Configuramos el puerto
 const PORT = process.env.PORT || 3000;

@@ -1,31 +1,37 @@
 const Pedido = require('../models/pedido.model');
 
-const getAllPedidos = async (req, res) => {
+/**
+ * Obtener todos los pedidos.
+ */
+const getAllPedidos = async (req, res, next) => {
   try {
     const pedidos = await Pedido.obtenerTodos();
     res.json(pedidos);
   } catch (error) {
-    console.error('❌ Error al obtener pedidos:', error);
-    res.status(500).json({ message: 'Error al obtener pedidos' });
+    next(error); // Manejo de errores global
   }
 };
 
-const getPedidoById = async (req, res) => {
+/**
+ * Obtener un pedido por su ID.
+ */
+const getPedidoById = async (req, res, next) => {
   const { id_pedido } = req.params;
   try {
     const pedido = await Pedido.obtenerPorId(id_pedido);
-    if (pedido) {
-      res.json(pedido);
-    } else {
-      res.status(404).json({ message: 'Pedido no encontrado' });
+    if (!pedido) {
+      return res.status(404).json({ message: 'Pedido no encontrado' });
     }
+    res.json(pedido);
   } catch (error) {
-    console.error('❌ Error al obtener pedido:', error);
-    res.status(500).json({ message: 'Error al obtener pedido' });
+    next(error);
   }
 };
 
-const createPedido = async (req, res) => {
+/**
+ * Crear un nuevo pedido.
+ */
+const createPedido = async (req, res, next) => {
   const {
     id_cliente,
     id_ruta,
@@ -50,14 +56,17 @@ const createPedido = async (req, res) => {
       precio,
       nro_guia,
     });
+
     res.status(201).json(nuevoPedido);
   } catch (error) {
-    console.error('❌ Error al crear pedido:', error);
-    res.status(500).json({ message: 'Error al crear pedido' });
+    next(error);
   }
 };
 
-const updatePedido = async (req, res) => {
+/**
+ * Actualizar un pedido existente por ID.
+ */
+const updatePedido = async (req, res, next) => {
   const { id_pedido } = req.params;
   const {
     estado,
@@ -75,22 +84,24 @@ const updatePedido = async (req, res) => {
       precio,
       nro_guia,
     });
+
     res.json(pedidoActualizado);
   } catch (error) {
-    console.error('❌ Error al actualizar pedido:', error);
-    res.status(500).json({ message: 'Error al actualizar pedido' });
+    next(error);
   }
 };
 
-const deletePedido = async (req, res) => {
+/**
+ * Eliminar un pedido por ID.
+ */
+const deletePedido = async (req, res, next) => {
   const { id_pedido } = req.params;
 
   try {
     await Pedido.eliminar(id_pedido);
     res.json({ message: 'Pedido eliminado correctamente' });
   } catch (error) {
-    console.error('❌ Error al eliminar pedido:', error);
-    res.status(500).json({ message: 'Error al eliminar pedido' });
+    next(error);
   }
 };
 

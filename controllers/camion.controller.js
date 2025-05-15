@@ -1,5 +1,8 @@
 const Camion = require('../models/camion.model');
 
+/**
+ * Obtiene todos los camiones registrados en el sistema.
+ */
 const getAllCamiones = async (req, res) => {
   try {
     const camiones = await Camion.obtenerTodos();
@@ -10,11 +13,27 @@ const getAllCamiones = async (req, res) => {
   }
 };
 
+/**
+ * Crea un nuevo camión con los datos proporcionados en el cuerpo de la solicitud.
+ */
 const createCamion = async (req, res) => {
-  const { placa, capacidad_kg, estado_operativo, ubicacion_actual, km_actual } = req.body;
+  const {
+    placa,
+    capacidad_kg,
+    estado_operativo,
+    ubicacion_actual,
+    km_actual
+  } = req.body;
 
   try {
-    const nuevoCamion = await Camion.crear({ placa, capacidad_kg, estado_operativo, ubicacion_actual, km_actual });
+    const nuevoCamion = await Camion.crear({
+      placa,
+      capacidad_kg,
+      estado_operativo,
+      ubicacion_actual,
+      km_actual
+    });
+
     res.status(201).json(nuevoCamion);
   } catch (error) {
     console.error('❌ Error al crear camión:', error);
@@ -22,13 +41,17 @@ const createCamion = async (req, res) => {
   }
 };
 
-
+/**
+ * Actualiza los datos de un camión existente a partir de su ID.
+ */
 const updateCamion = async (req, res) => {
   const { id_camion } = req.params;
-  const data = req.body; // ⚠️ Verifica si llega vacío
-  //log para ver los datos que llegan
-  console.log('📦 Datos recibidos para actualizar:', req.body);
+  const data = req.body;
 
+  // Verifica si se enviaron campos
+  if (!data || Object.keys(data).length === 0) {
+    return res.status(400).json({ message: 'No se enviaron campos para actualizar' });
+  }
 
   try {
     const camionActualizado = await Camion.actualizar(id_camion, data);
@@ -39,9 +62,12 @@ const updateCamion = async (req, res) => {
   }
 };
 
-
+/**
+ * Elimina un camión existente a partir de su ID.
+ */
 const deleteCamion = async (req, res) => {
   const { id_camion } = req.params;
+
   try {
     await Camion.eliminar(id_camion);
     res.json({ message: 'Camión eliminado correctamente' });
@@ -57,3 +83,4 @@ module.exports = {
   updateCamion,
   deleteCamion,
 };
+
